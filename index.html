@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html id="root" lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maritime Decarbonization Simulator | IMO GFI Compliance & Carbon Cost Calculator</title>
+<meta name="description" content="Interactive analytical tool illustrating the economic implications of the IMO Net-Zero Framework and GFI compliance mechanism for international shipping. Includes GFI targets, carbon cost calculator, Tier 1 and Tier 2 compliance simulation.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f4f8;color:#1a2e4a;transition:direction .2s}
+html[dir="ltr"] .fbox{border-right:none;border-left:4px solid}
+html[dir="ltr"] .fund-col{border-right:none;border-left:3px solid rgba(255,255,255,.15);padding-right:0;padding-left:14px}
+html[dir="ltr"] .fund-col:last-child{border-left:none;padding-left:0}
+html[dir="ltr"] .zcard ul{padding-right:0;padding-left:15px}
+html[dir="ltr"] table td:first-child,html[dir="ltr"] table th:first-child{text-align:left}
+html[dir="ltr"] .ar-only{display:none!important}
+
+/* LANG SWITCHER */
+.lang-bar{background:#1B3A5C;display:flex;justify-content:flex-end;padding:6px 20px;gap:6px}
+.lang-btn{border:1px solid rgba(255,255,255,.35);background:transparent;color:#cde;border-radius:6px;padding:4px 14px;font-size:.75rem;font-weight:700;cursor:pointer;transition:all .18s}
+.lang-btn.active{background:#4A90C4;color:#fff;border-color:#4A90C4}
+.lang-btn:hover{background:rgba(255,255,255,.1)}
+
+/* HEADER */
+.hdr{background:linear-gradient(120deg,#1B3A5C,#2E6DA4);color:#fff;padding:15px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.hdr h1{font-size:1.1rem;font-weight:900}
+.hdr p{font-size:.72rem;color:#b0d4ef;margin-top:3px}
+.imo-logo{background:#fff;color:#1B3A5C;border-radius:10px;padding:8px 16px;text-align:center;font-weight:900;font-size:.8rem}
+.imo-logo small{display:block;font-size:.62rem;color:#666;font-weight:400}
+
+/* WRAP */
+.wrap{max-width:1280px;margin:0 auto;padding:16px 18px}
+
+/* CHART CARD */
+.chart-card{background:#fff;border-radius:16px;box-shadow:0 3px 16px rgba(0,0,0,.1);padding:20px 18px 14px;margin-bottom:16px}
+.chart-card h2{text-align:center;font-size:.95rem;color:#1B3A5C;font-weight:900;margin-bottom:3px}
+.chart-card .sub{text-align:center;font-size:.7rem;color:#4A90C4;margin-bottom:14px}
+canvas{display:block;width:100%!important}
+.ann-legend{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px}
+.ann-item{display:flex;align-items:center;gap:6px;font-size:.72rem;font-weight:700;padding:4px 10px;border-radius:20px;background:#f5f8fb}
+.dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+
+/* ZONES */
+.zones{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-bottom:16px}
+.zcard{border-radius:14px;padding:15px 16px;border-top:5px solid;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.07)}
+.zcard h3{font-size:.87rem;font-weight:900;margin-bottom:9px}
+.zcard ul{padding-right:15px;font-size:.74rem;color:#444;line-height:1.8}
+.zcard .ztag{display:inline-block;margin-top:8px;padding:4px 13px;border-radius:20px;font-size:.76rem;font-weight:800;color:#fff}
+.z-sur{border-color:#22A45D} .z-sur h3{color:#22A45D} .z-sur .ztag{background:#22A45D}
+.z-t1 {border-color:#E07B00} .z-t1  h3{color:#E07B00} .z-t1  .ztag{background:#E07B00}
+.z-t2 {border-color:#CC2200} .z-t2  h3{color:#CC2200} .z-t2  .ztag{background:#CC2200}
+
+/* FUND */
+.fund-box{background:#1B3A5C;color:#fff;border-radius:14px;padding:15px 20px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start}
+.fund-box h3{font-size:.9rem;font-weight:900;color:#7ec8ea;margin-bottom:8px;width:100%}
+.fund-col{flex:1;min-width:180px;font-size:.74rem;line-height:1.8;border-right:3px solid rgba(255,255,255,.15);padding-right:14px}
+.fund-col:last-child{border-right:none;padding-right:0}
+.fund-col h4{font-size:.78rem;font-weight:800;margin-bottom:5px}
+.fund-col.fc-green h4{color:#7de8a0}
+.fund-col.fc-blue  h4{color:#7ec8ea}
+
+/* FORMULAS */
+.form-card{background:#1B3A5C;color:#fff;border-radius:14px;padding:17px 20px;margin-bottom:16px}
+.form-card h3{text-align:center;font-size:.9rem;color:#7ec8ea;margin-bottom:13px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}}
+.fbox{background:rgba(255,255,255,.07);border-radius:9px;padding:10px 13px;border-right:4px solid}
+.fbox h4{font-size:.73rem;margin-bottom:6px}
+.fbox code{font-family:'Courier New',monospace;font-size:.7rem;direction:ltr;display:block;line-height:1.75;color:#ddeeff}
+.fbox p{font-size:.67rem;color:#9ab8cc;margin-top:5px;line-height:1.5}
+.fb-t2{border-color:#CC2200} .fb-t2 h4{color:#ff8070}
+.fb-t1{border-color:#E07B00} .fb-t1 h4{color:#ffd07a}
+.fb-all{border-color:#7ec8ea} .fb-all h4{color:#7ec8ea}
+.fb-fr{border-color:#22A45D} .fb-fr  h4{color:#7de8a0}
+
+/* TABLE */
+.tbl-card{background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.07);overflow:hidden;margin-bottom:16px}
+.tbl-hdr{background:#1B3A5C;color:#fff;padding:11px 16px;font-size:.88rem;font-weight:800}
+table{width:100%;border-collapse:collapse;font-size:.76rem}
+th{background:#2E6DA4;color:#fff;padding:9px 10px;text-align:center;font-size:.73rem;font-weight:700}
+td{padding:8px 10px;text-align:center;border-bottom:1px solid #EBF5FB;color:#333}
+tr:nth-child(even) td{background:#f5fafd}
+tr:last-child td{border-bottom:none;font-weight:800;background:#eef5fb}
+.ty{font-weight:800;color:#1B3A5C}
+.tb{color:#CC2200;font-weight:700}
+.td{color:#E07B00;font-weight:700}
+
+/* CALCULATOR */
+.calc-card{background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.07);padding:17px 20px;margin-bottom:16px}
+.calc-card h3{font-size:.92rem;font-weight:900;color:#1B3A5C;margin-bottom:15px;text-align:center}
+.sl-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:580px){.sl-grid{grid-template-columns:1fr}}
+.sl-row{display:flex;flex-direction:column;gap:5px}
+.sl-row label{font-size:.76rem;font-weight:700;color:#1B3A5C}
+.sl-track{display:flex;align-items:center;gap:8px}
+input[type=range]{flex:1;accent-color:#2E6DA4}
+.sl-val{font-size:.77rem;font-weight:800;color:#fff;background:#2E6DA4;padding:3px 10px;border-radius:15px;min-width:80px;text-align:center}
+.res-main{margin-top:15px;border-radius:12px;border:2px solid;padding:13px 17px;font-size:.78rem;line-height:2}
+.res-rows{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:9px;margin-top:13px}
+.rb{border-radius:10px;padding:11px 12px;text-align:center}
+.rb .rl{font-size:.67rem;color:#666;margin-bottom:4px}
+.rb .rv{font-size:1rem;font-weight:900}
+.rb1{background:rgba(232,160,0,.1)}  .rb2{background:rgba(204,34,0,.1)}
+.rbt{background:rgba(27,58,92,.08)}  .rbf{background:rgba(46,109,164,.1)}
+.rbs{background:rgba(34,164,93,.1)}
+
+/* FOOTER */
+.src{text-align:center;font-size:.68rem;color:#999;margin-top:6px;padding-bottom:4px}
+.src a{color:#4A90C4}
+
+/* ATTRIBUTION */
+.attribution{
+  background:linear-gradient(120deg,#1B3A5C,#2E6DA4);
+  color:#fff;
+  text-align:center;
+  padding:14px 20px 16px;
+  font-size:.78rem;
+  line-height:1.9;
+  margin-top:0;
+}
+.attribution .attr-name{
+  font-size:1rem;
+  font-weight:900;
+  color:#fff;
+  letter-spacing:.3px;
+}
+.attribution .attr-title{
+  font-size:.76rem;
+  color:#a8d4ef;
+  font-weight:500;
+}
+.attribution .attr-divider{
+  width:60px;
+  height:2px;
+  background:rgba(255,255,255,.25);
+  margin:8px auto;
+  border-radius:2px;
+}
+
+/* DISCLAIMER BANNER */
+.disclaimer-banner{
+  background:#fffbe6;
+  border-top:3px solid #e07b00;
+  border-bottom:3px solid #e07b00;
+  text-align:center;
+  padding:10px 24px;
+  font-size:.74rem;
+  color:#5c3a00;
+  line-height:1.7;
+}
+.disclaimer-banner strong{color:#1B3A5C;font-size:.78rem}
+.disclaimer-banner .disc-ar{display:block}
+.disclaimer-banner .disc-en{display:block}
+html[dir="ltr"] .disclaimer-banner .disc-ar{display:none}
+html[dir="rtl"] .disclaimer-banner .disc-en{display:none}
+</style>
+</head>
+<body>
+
+<!-- LANG SWITCHER -->
+<div class="lang-bar">
+  <button class="lang-btn active" onclick="setLang('ar')">🇸🇦 العربية</button>
+  <button class="lang-btn"        onclick="setLang('en')">🇬🇧 English</button>
+</div>
+
+<!-- DISCLAIMER BANNER -->
+<div class="disclaimer-banner">
+  <span class="disc-ar">⚠️ <strong>إشعار مهم:</strong> هذه الأداة عرض تحليلي مستقل مبني على معلومات متاحة للعموم ومناقشات السياسات داخل IMO بشأن إطار الصفر الصافي المقترح وآلية امتثال GFI. وهي <strong>ليست أداة رسمية للمنظمة البحرية الدولية (IMO)</strong> ولا تمثل المنظمة بأي صفة رسمية. مستويات أسعار الكربون الواردة في هذه الأداة هي قيم استرشادية جرى تداولها خلال مفاوضات IMO ولا ينبغي تفسيرها على أنها أسعار تنظيمية نهائية.</span>
+  <span class="disc-en">⚠️ <strong>Important Notice:</strong> This tool is an independent analytical demonstration based on publicly available information and policy discussions within the IMO regarding the proposed Net-Zero Framework and GFI compliance mechanism. It is <strong>not an official IMO tool</strong> and does not represent the International Maritime Organization. Carbon price levels shown in this tool are indicative values discussed during IMO negotiations and should not be interpreted as final regulatory prices.</span>
+</div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div>
+    <h1 data-ar="Maritime Decarbonization Simulator"
+        data-en="Maritime Decarbonization Simulator">Maritime Decarbonization Simulator</h1>
+    <p style="font-size:.7rem;color:#ffd07a;font-weight:700;margin-top:2px;" data-ar="IMO Net-Zero Framework — GFI Compliance Tiers" data-en="IMO Net-Zero Framework — GFI Compliance Tiers">IMO Net-Zero Framework — GFI Compliance Tiers</p>
+    <p style="font-size:.71rem;color:#cde;margin-top:4px;font-style:italic;"
+       data-ar="أداة تحليلية تفاعلية تُوضّح التداعيات الاقتصادية لإطار IMO للوصول إلى الصفر الصافي وآلية امتثال GFI للشحن الدولي."
+       data-en="Interactive analytical tool illustrating the economic implications of the IMO Net-Zero Framework and GFI compliance mechanism for international shipping."></p>
+    <p data-ar="الشكل البياني الرسمي لآلية Tier 1 &amp; Tier 2 | مستند إلى الشكل الرسمي لـ IMO | MARPOL Annex VI — MEPC 83"
+       data-en="Official compliance diagram for Tier 1 &amp; Tier 2 mechanism | Based on official IMO diagram | MARPOL Annex VI — MEPC 83"></p>
+  </div>
+  <div class="imo-logo">
+    🌊 IMO
+    <small data-ar="MEPC 83 | تطبيق: 1 يناير 2028" data-en="MEPC 83 | Effective: 1 January 2028"></small>
+    <small data-ar="السفن ≥ 5,000 GT" data-en="Ships ≥ 5,000 GT"></small>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- CHART -->
+<div class="chart-card">
+  <h2 data-ar="مسارات GFI (2028–2050) — مطابق للشكل الرسمي لـ IMO"
+      data-en="GFI Trajectories (2028–2050) — Based on Official IMO Diagram"></h2>
+  <p class="sub"
+     data-ar="القيمة المرجعية = 93.3 gCO₂eq/MJ (متوسط أسطول 2008، Well-to-Wake) | المصدر: IMO MEPC 83 | ⚠️ مسار Direct بعد 2035 رهن مراجعة MEPC قبل 2032"
+     data-en="Reference value = 93.3 gCO₂eq/MJ (2008 fleet average, Well-to-Wake) | Source: IMO MEPC 83 | ⚠️ Post-2035 Direct Compliance trajectory subject to MEPC review before 2032"></p>
+  <div id="mainChart" style="width:100%;overflow-x:auto"></div>
+  <div class="ann-legend">
+    <div class="ann-item" style="background:#fff0f0;border:1px solid #f5c6c6;flex-direction:column;align-items:flex-start;gap:2px;padding:6px 12px;">
+      <span style="color:#888;font-size:.65rem;font-style:italic;" data-ar="مستويات أسعار كربون استرشادية تمت مناقشتها في مفاوضات IMO:" data-en="Indicative carbon price levels discussed within IMO negotiations:">Indicative carbon price levels discussed within IMO negotiations:</span>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:5px;"><div class="dot" style="background:rgba(204,34,0,.5)"></div>
+          <span style="color:#CC2200" data-ar="Tier 2: ~$380/tCO₂eq" data-en="Tier 2: ~$380/tCO₂eq">Tier 2: ~$380/tCO₂eq</span></div>
+        <div style="display:flex;align-items:center;gap:5px;"><div class="dot" style="background:rgba(232,160,0,.6)"></div>
+          <span style="color:#E07B00" data-ar="Tier 1: ~$100/tCO₂eq" data-en="Tier 1: ~$100/tCO₂eq">Tier 1: ~$100/tCO₂eq</span></div>
+      </div>
+    </div>
+    <div class="ann-item"><div class="dot" style="background:rgba(34,164,93,.5)"></div>
+      <span style="color:#22A45D" data-ar="منطقة الفائض — Surplus Units" data-en="Surplus Units Zone">Surplus Units (SUs)</span></div>
+    <div class="ann-item"><div class="dot" style="background:#555;border-radius:0;height:3px"></div>
+      <span data-ar="Base Target GFI" data-en="Base Target GFI">Base Target GFI</span></div>
+    <div class="ann-item"><div class="dot" style="background:#22A45D;border-radius:0;height:3px"></div>
+      <span data-ar="Direct Compliance Target GFI" data-en="Direct Compliance Target GFI">Direct Compliance Target GFI</span></div>
+    <div class="ann-item"><div class="dot" style="background:#22A45D;border-radius:0;height:2px;opacity:.6"></div>
+      <span data-ar="حد ZNZ (19→14 g/MJ)" data-en="ZNZ Threshold (19→14 g/MJ)">ZNZ Threshold</span></div>
+    <div class="ann-item" style="background:#fff3cd;border:1px solid #ffc107">
+      <span style="color:#856404;font-size:.68rem" data-ar="الحد الأدنى للرسم (12 g/MJ) = حد بصري فقط — لا يمثل حداً تنظيمياً" data-en="Chart lower bound (12 g/MJ) = visualization floor only — not a regulatory limit">Viz. floor: not a regulatory limit</span></div>
+  </div>
+</div>
+
+<!-- THREE ZONES -->
+<div class="zones">
+  <div class="zcard z-t2">
+    <h3 data-ar="🔴 TIER 2 DEFICIT — الحالة الأسوأ"
+        data-en="🔴 TIER 2 DEFICIT — Worst Case"></h3>
+    <ul id="z-t2-list">
+      <li data-ar="GFI <strong>أعلى من Base Target</strong>" data-en="GFI <strong>above Base Target</strong> (upper gray line)"></li>
+      <li data-ar="السفينة تتجاوز الحد الأعلى المسموح به" data-en="Ship exceeds the maximum permitted limit"></li>
+      <li data-ar="<strong>3 خيارات لسد الـ Tier 2</strong> (وفق الشكل الرسمي):" data-en="<strong>3 options to cover Tier 2</strong> (per official IMO diagram):"></li>
+      <li data-ar="① نقل <strong>SUs من سفن أخرى</strong>" data-en="① Transfer <strong>SUs from other ships</strong>"></li>
+      <li data-ar="② استخدام <strong>SUs مخزّنة (Banked)</strong> من فترات سابقة" data-en="② Use <strong>Banked SUs</strong> from previous reporting periods"></li>
+      <li data-ar="③ شراء RUs: <strong>$380/tCO₂eq</strong> على الجزء فوق Base + <strong>$100/tCO₂eq</strong> على الجزء بين Direct وBase (كل منهما يُحسب على حدة)" data-en="③ Purchase RUs: <strong>$380/tCO₂eq</strong> on the portion above Base + <strong>$100/tCO₂eq</strong> on the portion between Direct and Base (each charged separately, not a flat combined rate)"></li>
+    </ul>
+    <span class="ztag" data-ar="$380 (فوق Base) + $100 (بين Direct↔Base)" data-en="$380 (above Base) + $100 (Direct↔Base gap)">$380 (above Base) + $100 (gap)</span>
+  </div>
+
+  <div class="zcard z-t1">
+    <h3 data-ar="🟡 TIER 1 DEFICIT فقط"
+        data-en="🟡 TIER 1 DEFICIT Only"></h3>
+    <ul id="z-t1-list">
+      <li data-ar="GFI <strong>بين Direct و Base</strong> targets" data-en="GFI <strong>between Direct and Base</strong> targets"></li>
+      <li data-ar="السفينة تلتزم بـ Base لكن لا تصل لـ Direct" data-en="Ship meets Base but fails Direct Compliance target"></li>
+      <li data-ar="<strong>خيار وحيد:</strong> شراء Tier 1 Remedial Units" data-en="<strong>Single option:</strong> Purchase Tier 1 Remedial Units"></li>
+      <li data-ar="السعر: <strong>$100/tCO₂eq</strong> (2028–2030)" data-en="Price: <strong>$100/tCO₂eq</strong> (2028–2030)"></li>
+      <li data-ar="يذهب المال لـ <strong>IMO Net-Zero Fund</strong>" data-en="Revenue goes to <strong>IMO Net-Zero Fund</strong>"></li>
+      <li data-ar="مصمَّم لتوليد <strong>إيراد ثابت</strong> — ليس ردعاً" data-en="Designed to generate <strong>predictable revenue</strong> — not deterrence"></li>
+    </ul>
+    <span class="ztag" data-ar="Direct &lt; GFI ≤ Base → $100" data-en="Direct &lt; GFI ≤ Base → $100">Direct &lt; GFI ≤ Base → $100</span>
+  </div>
+
+  <div class="zcard z-sur">
+    <h3 data-ar="🟢 SURPLUS UNITS — الأداء الأفضل"
+        data-en="🟢 SURPLUS UNITS — Over-Compliance"></h3>
+    <ul id="z-sur-list">
+      <li data-ar="GFI <strong>أقل من Direct Compliance Target</strong>" data-en="GFI <strong>below Direct Compliance Target</strong>"></li>
+      <li data-ar="السفينة تحصل على <strong>Surplus Units (SUs)</strong>" data-en="Ship earns <strong>Surplus Units (SUs)</strong>"></li>
+      <li data-ar="القيمة السوقية للـ SU تتماشى مع سقف تكلفة Tier 2 RU (<strong>$380/tCO₂eq</strong>) كحد أقصى للتكلفة المتجنَّبة — غير مضمونة تعاقدياً" data-en="Market value expected to align with Tier 2 RU price ceiling (<strong>$380/tCO₂eq</strong> avoided cost) — not contractually guaranteed"></li>
+      <li data-ar="<strong>3 استخدامات للـ SUs:</strong>" data-en="<strong>3 uses for SUs:</strong>"></li>
+      <li data-ar="① <strong>نقل (بيع)</strong> لسفن في Tier 2 deficit" data-en="① <strong>Transfer (sell)</strong> to ships with Tier 2 deficit"></li>
+      <li data-ar="② <strong>تخزين (Banking)</strong> حتى فترتين قادمتين" data-en="② <strong>Bank</strong> for up to two future reporting periods"></li>
+      <li data-ar="③ <strong>إلغاء طوعي</strong> كمساهمة بيئية" data-en="③ <strong>Voluntarily cancel</strong> as environmental contribution"></li>
+    </ul>
+    <span class="ztag" data-ar="GFI &lt; Direct → SUs مكافأة" data-en="GFI &lt; Direct → Earn SUs">GFI &lt; Direct → Earn SUs</span>
+  </div>
+</div>
+
+<!-- FUND BOX -->
+<div class="fund-box">
+  <h3 data-ar="💰 IMO NET-ZERO FUND — وجهة الإيرادات (وفق الشكل الرسمي)"
+      data-en="💰 IMO NET-ZERO FUND — Revenue Distribution (per Official IMO Diagram)"></h3>
+  <div class="fund-col fc-green">
+    <h4 data-ar="🌱 مكافآت ZNZ (السهم الأخضر)" data-en="🌱 ZNZ Rewards (Green Arrow)"></h4>
+    <span data-ar="السفن التي تستخدم وقود <strong>Zero/Near-Zero</strong>:<br>• GFI ≤ <strong>19 gCO₂eq/MJ</strong> حتى 31 ديسمبر 2034<br>• GFI ≤ <strong>14 gCO₂eq/MJ</strong> من 1 يناير 2035<br>• أمثلة: e-Methanol، e-Ammonia (بكهرباء متجددة)<br>• آلية المكافأة تُحدَّد قبل <strong>1 مارس 2027</strong><br>• تُراجع كل <strong>5 سنوات</strong>"
+          data-en="Ships using <strong>Zero/Near-Zero</strong> fuels:<br>• GFI ≤ <strong>19 gCO₂eq/MJ</strong> until 31 December 2034<br>• GFI ≤ <strong>14 gCO₂eq/MJ</strong> from 1 January 2035<br>• Examples: e-Methanol, e-Ammonia (using 100% renewable electricity)<br>• Reward mechanism to be defined by <strong>1 March 2027</strong><br>• Reviewed every <strong>5 years</strong>"></span>
+  </div>
+  <div class="fund-col fc-blue">
+    <h4 data-ar="🌍 التحول العادل (السهم الأزرق)" data-en="🌍 Just & Equitable Transition (Blue Arrow)"></h4>
+    <span data-ar="دعم الدول النامية وصغار الجزر:<br>• تسهيل حماية البيئة والمناخ<br>• بناء القدرات والمرونة<br>• دعم التحول الطاقي في الشحن<br>• خاصة: الدول الجزرية الصغيرة النامية<br>• وأقل الدول نمواً (LDCs)"
+          data-en="Support for developing nations &amp; small islands:<br>• Facilitate environmental &amp; climate protection<br>• Capacity building and resilience<br>• Support energy transition in shipping<br>• Particularly: Small Island Developing States (SIDS)<br>• And Least Developed Countries (LDCs)"></span>
+  </div>
+  <div class="fund-col">
+    <h4 style="color:#ffd07a" data-ar="📥 مصادر الإيراد" data-en="📥 Revenue Sources"></h4>
+    <span data-ar="• Tier 1 RUs: <strong>$100/tCO₂eq</strong> × العجز<br>• Tier 2 RUs: <strong>$380/tCO₂eq</strong> × العجز فوق Base<br>• رسوم إدارية لسجل IMO GFI Registry<br>• لا يُوزَّع على الدول الأعضاء بشكل مباشر<br>• يُدار وفق إطار حوكمة IMO وآليات الصرف المعتمدة من الدول الأعضاء"
+          data-en="• Tier 1 RUs: <strong>$100/tCO₂eq</strong> × deficit<br>• Tier 2 RUs: <strong>$380/tCO₂eq</strong> × deficit above Base<br>• Administrative fee for IMO GFI Registry<br>• Not distributed directly to Member States<br>• Administered under IMO governance framework with disbursement mechanisms approved by Member States"></span>
+  </div>
+</div>
+
+<!-- FORMULAS -->
+<div class="form-card">
+  <h3 data-ar="📐 معادلات حساب تكلفة الكربون — مطابقة للشكل الرسمي لـ IMO"
+      data-en="📐 Carbon Cost Calculation Formulas — Based on Official IMO Diagram"></h3>
+  <div class="form-grid">
+    <div class="fbox fb-t2">
+      <h4 data-ar="🔴 Tier 2 deficit — الفجوة فوق Base"
+          data-en="🔴 Tier 2 deficit — Gap above Base Target"></h4>
+      <code>T2_deficit (g/MJ) =
+  MAX(0,  GFI_attained − Base_target)
+
+T2_Cost ($/MJ) =
+  (T2_deficit ÷ 1,000,000) × $380</code>
+      <p data-ar="كل غرام فوق Base يُكلَّف بـ $380/طن — يُسدَّد بـ RUs أو SUs محوَّلة/مبنكرة"
+         data-en="Every g/MJ above Base is charged at $380/tCO₂eq — settled via RUs or transferred/banked SUs"></p>
+    </div>
+    <div class="fbox fb-t1">
+      <h4 data-ar="🟡 Tier 1 deficit — الفجوة بين Direct و Base"
+          data-en="🟡 Tier 1 deficit — Gap between Direct and Base"></h4>
+      <code>T1_deficit (g/MJ) =
+  MAX(0,  MIN(GFI_attained, Base_target)
+          − Direct_target)
+
+T1_Cost ($/MJ) =
+  (T1_deficit ÷ 1,000,000) × $100</code>
+      <p data-ar="ثابت = Base − Direct عند كل سفينة في Tier 2 — يُسدَّد بـ Tier 1 RUs فقط"
+         data-en="Fixed = Base − Direct for any ship in Tier 2 — settled via Tier 1 RUs only (no SUs)"></p>
+    </div>
+    <div class="fbox fb-all">
+      <h4 data-ar="💰 إجمالي تكلفة الكربون"
+          data-en="💰 Total Carbon Cost"></h4>
+      <code>Carbon_Cost ($/MJ) =
+  T1_Cost + T2_Cost
+
+= (T1_deficit ÷ 1e6) × 100
++ (T2_deficit ÷ 1e6) × 380
+
+÷ 1,000,000 converts g/MJ → t/MJ</code>
+      <p data-ar="أسعار 2028–2030 مُثبَّتة | تُراجع قبل 2031 | الأسعار 2031+ تُحدَّد بآلية مراجعة MEPC"
+         data-en="Prices fixed for 2028–2030 | Reviewed before 2031 | Post-2031 prices set by MEPC review mechanism"></p>
+    </div>
+    <div class="fbox fb-fr ar-only">
+      <h4>🚢 أثر تكلفة الشحن (Pass-through)</h4>
+      <code>Fuel_Cost ($/MJ) =
+  VLSFO_price ($/mt) ÷ LHV (MJ/mt)
+  = 426.77 ÷ 40,200 = 0.01062 $/MJ
+
+Fuel_surcharge% =
+  Carbon_Cost ÷ Fuel_Cost × 100
+
+Freight_increase% =
+  Fuel_surcharge% × Pass-through (40%)</code>
+      <p>40% = معامل التمرير المفترض لحصة الوقود من تكلفة الرحلة</p>
+    </div>
+  </div>
+</div>
+
+<!-- TARGETS TABLE -->
+<div class="tbl-card">
+  <div class="tbl-hdr"
+       data-ar="📊 جدول مستهدفات GFI السنوية — الأرقام الرسمية من الشكل الرسمي لـ IMO (MEPC 83)"
+       data-en="📊 Annual GFI Targets Table — Official Figures from IMO Diagram (MEPC 83)"></div>
+  <table>
+    <thead>
+      <tr>
+        <th data-ar="السنة" data-en="Year">Year</th>
+        <th style="color:#ffb3aa">
+          <span data-ar="Base Target (g/MJ)" data-en="Base Target (g/MJ)">Base Target (g/MJ)</span><br>
+          <small data-ar="تخفيض عن 93.3" data-en="Reduction from 93.3">Reduction from 93.3</small>
+        </th>
+        <th style="color:#ffd97a">
+          <span data-ar="Direct Compliance (g/MJ)" data-en="Direct Compliance (g/MJ)">Direct Compliance (g/MJ)</span><br>
+          <small data-ar="تخفيض عن 93.3" data-en="Reduction from 93.3">Reduction from 93.3</small>
+        </th>
+        <th>
+          <span data-ar="الفجوة Base↔Direct (g/MJ)" data-en="Gap Base↔Direct (g/MJ)">Gap (g/MJ)</span>
+        </th>
+        <th>
+          <span data-ar="T1 Cost/TJ ($k)" data-en="T1 Cost/TJ ($k)">T1 Cost/TJ ($k)</span>
+        </th>
+        <th>
+          <span data-ar="T2 Cost/TJ/g ($k)" data-en="T2 Cost/TJ/g ($k)">T2 Cost/TJ/g ($k)</span>
+        </th>
+      </tr>
+    </thead>
+    <tbody id="tblBody"></tbody>
+  </table>
+</div>
+
+<!-- CALCULATOR -->
+<div class="calc-card">
+  <h3 data-ar="🧮 حاسبة الامتثال التفاعلية — مطابقة للشكل الرسمي لـ IMO"
+      data-en="🧮 Interactive Compliance Calculator — Based on Official IMO Diagram"></h3>
+  <div class="sl-grid">
+    <div class="sl-row">
+      <label data-ar="GFI الفعلي للسفينة (gCO₂eq/MJ)"
+             data-en="Ship's Attained GFI (gCO₂eq/MJ)"></label>
+      <div class="sl-track">
+        <input type="range" id="slGfi" min="14" max="95" step="0.5" value="91">
+        <span class="sl-val" id="vGfi">91.0 g/MJ</span>
+      </div>
+    </div>
+    <div class="sl-row">
+      <label data-ar="السنة المرجعية"
+             data-en="Reference Year"></label>
+      <div class="sl-track">
+        <input type="range" id="slYr" min="2028" max="2040" step="1" value="2028">
+        <span class="sl-val" id="vYr">2028</span>
+      </div>
+    </div>
+    <div class="sl-row">
+      <label data-ar="استهلاك الطاقة السنوي (TJ = 10⁶ MJ)"
+             data-en="Annual Energy Consumption (TJ = 10⁶ MJ)"></label>
+      <div class="sl-track">
+        <input type="range" id="slEn" min="100" max="10000" step="100" value="1000">
+        <span class="sl-val" id="vEn">1,000 TJ</span>
+      </div>
+    </div>
+    <div class="sl-row ar-only">
+      <label data-ar="سعر VLSFO المرجعي ($/mt)"
+             data-en="VLSFO Reference Price ($/mt)">سعر VLSFO المرجعي ($/mt)</label>
+      <div class="sl-track">
+        <input type="range" id="slVl" min="300" max="750" step="5" value="427">
+        <span class="sl-val" id="vVl">427 $/mt</span>
+      </div>
+    </div>
+  </div>
+  <div id="resMain" class="res-main">—</div>
+  <div id="resRows" class="res-rows"></div>
+</div>
+
+<p class="src">
+  <span data-ar="المصدر الرسمي:" data-en="Official Source:">Source:</span>
+  <strong>IMO MEPC 83</strong> — Net-Zero Framework | MARPOL Annex VI
+  <span data-ar="(اعتمد أكتوبر 2025)" data-en="(adopted October 2025)">(adopted October 2025)</span> |
+  <a href="https://www.imo.org/en/MediaCentre/PressBriefings/Pages/30-MEPC83-IMO-approves-regulations-for-net-zero-framework.aspx" target="_blank">www.imo.org</a>
+  | <span data-ar="سريان: 1 مارس 2027 | أول سنة امتثال: 2028" data-en="Entry into force: 1 March 2027 | First compliance year: 2028">Entry into force: 1 March 2027</span>
+</p>
+
+</div><!-- end .wrap -->
+
+<!-- ATTRIBUTION FOOTER -->
+<div class="attribution">
+  <div class="attr-divider"></div>
+  <div class="attr-title"
+       data-ar="فكرة وتصميم وتنفيذ · أداة بحثية مستقلة — إزالة الكربون من القطاع البحري"
+       data-en="Concept, Design &amp; Implementation &nbsp;·&nbsp; Independent Research Tool — Maritime Decarbonization">
+  </div>
+  <div class="attr-name"
+       data-ar="د.م / رشيد عوض"
+       data-en="Dr. Eng. Rasheed Awad">
+  </div>
+  <div class="attr-title" style="color:#a8d4ef;font-size:.74rem;margin-top:2px;"
+       data-ar="محلل إزالة الكربون من القطاع البحري"
+       data-en="Maritime Decarbonization Analyst">
+  </div>
+  <div class="attr-divider"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- No external dependencies — chart rendered with pure SVG -->
+<script>
+// ══════════════════════════════════════════════════════════
+// LANGUAGE SYSTEM
+// ══════════════════════════════════════════════════════════
+let currentLang = 'ar';
+
+function setLang(lang) {
+  currentLang = lang;
+  const root = document.getElementById('root');
+  root.lang = lang;
+  root.dir  = lang === 'ar' ? 'rtl' : 'ltr';
+
+  // toggle button states
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.lang-btn[onclick="setLang('${lang}')"]`).classList.add('active');
+
+  // translate every element with data-ar / data-en
+  document.querySelectorAll('[data-ar]').forEach(el => {
+    const txt = el.getAttribute('data-' + lang);
+    if (txt !== null) {
+      // If it's a label, h1, h2, h3, h4, span, p, div with text — set innerHTML
+      el.innerHTML = txt;
+    }
+  });
+
+  // Rebuild table and re-run calculator with translated output
+  buildTable();
+  calc();
+
+  // Update chart x-axis label language
+  const xLbl = document.getElementById('xAxisLabel');
+  if(xLbl) xLbl.textContent = lang==='ar' ? 'السنة' : 'Year';
+}
+
+// ══════════════════════════════════════════════════════════
+// IMO DATA
+// ══════════════════════════════════════════════════════════
+const REF = 93.3;
+const LHV = 40200;
+
+function lerp(x,x0,x1,y0,y1){ return y0+(y1-y0)*(x-x0)/(x1-x0); }
+
+function basePct(y){
+  if(y<2028) return 0;
+  if(y<=2030) return lerp(y,2028,2030,2,8);
+  if(y<=2035) return lerp(y,2030,2035,8,30);
+  if(y<=2040) return lerp(y,2035,2040,30,65);
+  return 65;
+}
+function dirPct(y){
+  if(y<2028) return 0;
+  if(y<=2030) return lerp(y,2028,2030,4,21);
+  if(y<=2035) return lerp(y,2030,2035,21,43);
+  if(y<=2040) return lerp(y,2035,2040,43,70);
+  return 70;
+}
+function baseGfi(y){ return +(REF*(1-basePct(y)/100)).toFixed(2); }
+function dirGfi(y) { return +(REF*(1-dirPct(y)/100)).toFixed(2); }
+
+// ══════════════════════════════════════════════════════════
+// PURE SVG CHART — zero external dependencies
+// ══════════════════════════════════════════════════════════
+const chartYears = [];
+for(let y=2028;y<=2050;y++) chartYears.push(y);
+
+// SVG layout constants
+const SVG_W = 900, SVG_H = 400;
+const PAD = { top:20, right:30, bottom:55, left:62 };
+const PLOT_W = SVG_W - PAD.left - PAD.right;
+const PLOT_H = SVG_H - PAD.top  - PAD.bottom;
+const Y_MIN = 10, Y_MAX = 97;
+const LABEL_YEARS = [2028,2030,2035,2040,2045,2050];
+
+function xPos(year){ return PAD.left + (year-2028)/(2050-2028)*PLOT_W; }
+function yPos(val) { return PAD.top  + (1-(val-Y_MIN)/(Y_MAX-Y_MIN))*PLOT_H; }
+
+function makePts(yrArr, valFn){
+  return yrArr.map(y=>{ const v=valFn(y); return v==null?null:[xPos(y),yPos(v)]; }).filter(Boolean);
+}
+function pts2poly(pts){ return pts.map(p=>p.join(',')).join(' '); }
+function pts2path(pts){
+  if(!pts.length) return '';
+  return 'M'+pts.map((p,i)=>(i?'L':'')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join('');
+}
+
+let markerYear=2028, markerGfi=91;
+
+function buildSVG(mYear, mGfi){
+  const years = chartYears;
+
+  // Data points
+  const basePts  = years.map(y=>[xPos(y), yPos(baseGfi(y))]);
+  const dirPts   = years.map(y=>[xPos(y), yPos(dirGfi(y))]);
+  const refPts   = years.map(y=>[xPos(y), yPos(REF)]);
+  const floorPts = years.map(y=>[xPos(y), yPos(12)]);
+
+  // Polygon fills
+  // Tier2: ref → base (top band)
+  const t2poly = [...refPts, ...[...basePts].reverse()];
+  // Tier1: base → direct
+  const t1poly = [...basePts, ...[...dirPts].reverse()];
+  // Surplus: direct → floor
+  const surpPoly = [...dirPts, ...[...floorPts].reverse()];
+
+  // ZNZ lines
+  const znz19Pts = years.filter(y=>y<=2034).map(y=>[xPos(y), yPos(19)]);
+  const znz14Pts = years.filter(y=>y>=2035).map(y=>[xPos(y), yPos(14)]);
+  // connect overlap
+  const znz14Full= [[xPos(2034.5),yPos(14)], ...znz14Pts];
+
+  // Grid Y values
+  const gridVals = [20,30,40,50,60,70,80,90];
+
+  // Marker
+  const mx = xPos(mYear);
+  const my = yPos(mGfi);
+
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SVG_W} ${SVG_H}"
+    style="width:100%;height:auto;display:block;font-family:'Segoe UI',Arial,sans-serif">
+  <defs>
+    <clipPath id="plotClip"><rect x="${PAD.left}" y="${PAD.top}" width="${PLOT_W}" height="${PLOT_H}"/></clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="${SVG_W}" height="${SVG_H}" fill="white" rx="8"/>
+
+  <!-- Grid lines -->
+  ${gridVals.map(v=>`
+  <line x1="${PAD.left}" y1="${yPos(v).toFixed(1)}" x2="${PAD.left+PLOT_W}" y2="${yPos(v).toFixed(1)}"
+        stroke="rgba(0,0,0,0.06)" stroke-width="1"/>
+  <text x="${(PAD.left-6).toFixed(1)}" y="${(yPos(v)+4).toFixed(1)}" text-anchor="end"
+        font-size="10" fill="#666">${v}</text>`).join('')}
+
+  <!-- X grid lines for label years -->
+  ${LABEL_YEARS.map(y=>`
+  <line x1="${xPos(y).toFixed(1)}" y1="${PAD.top}" x2="${xPos(y).toFixed(1)}" y2="${PAD.top+PLOT_H}"
+        stroke="rgba(0,0,0,0.05)" stroke-width="1"/>`).join('')}
+
+  <!-- ZONE FILLS (clipped) -->
+  <g clip-path="url(#plotClip)">
+    <!-- Tier 2 red zone -->
+    <polygon points="${pts2poly(t2poly)}" fill="rgba(204,34,0,0.14)" stroke="none"/>
+    <!-- Tier 1 amber zone -->
+    <polygon points="${pts2poly(t1poly)}" fill="rgba(232,160,0,0.18)" stroke="none"/>
+    <!-- Surplus green zone -->
+    <polygon points="${pts2poly(surpPoly)}" fill="rgba(34,164,93,0.14)" stroke="none"/>
+
+    <!-- Zone labels inside chart -->
+    <text x="${xPos(2029).toFixed(1)}" y="${yPos(92).toFixed(1)}" font-size="10" font-weight="700"
+          fill="rgba(204,34,0,0.7)" text-anchor="middle">TIER 2</text>
+    <text x="${xPos(2029).toFixed(1)}" y="${yPos(88).toFixed(1)}" font-size="10" font-weight="700"
+          fill="rgba(232,160,0,0.85)" text-anchor="middle">TIER 1</text>
+    <text x="${xPos(2029).toFixed(1)}" y="${yPos(72).toFixed(1)}" font-size="10" font-weight="700"
+          fill="rgba(34,164,93,0.85)" text-anchor="middle">SURPLUS</text>
+
+    <!-- Reference line dashed -->
+    <path d="${pts2path(refPts)}" stroke="#999" stroke-width="1.5" fill="none"
+          stroke-dasharray="6 5"/>
+
+    <!-- Base Target line -->
+    <path d="${pts2path(basePts)}" stroke="#444" stroke-width="2.8" fill="none"/>
+
+    <!-- Direct Compliance dashed green -->
+    <path d="${pts2path(dirPts)}" stroke="#22A45D" stroke-width="2.5" fill="none"
+          stroke-dasharray="7 4"/>
+
+    <!-- ZNZ 19 line -->
+    ${znz19Pts.length?`<path d="${pts2path(znz19Pts)}" stroke="#22A45D" stroke-width="1.6" fill="none" stroke-dasharray="4 4"/>`:''}
+    <!-- ZNZ 14 line -->
+    ${znz14Full.length?`<path d="${pts2path(znz14Full)}" stroke="#22A45D" stroke-width="1.6" fill="none" stroke-dasharray="4 4"/>`:''}
+
+    <!-- Example VLSFO ship 91 g/MJ -->
+    <path d="${pts2path([[xPos(2028),yPos(91)],[xPos(2050),yPos(91)]])}"
+          stroke="#CC2200" stroke-width="1.8" fill="none" stroke-dasharray="5 3" opacity=".7"/>
+
+    <!-- Example LNG ship 76 g/MJ -->
+    <path d="${pts2path([[xPos(2028),yPos(76.1)],[xPos(2050),yPos(76.1)]])}"
+          stroke="#7B5EA7" stroke-width="1.8" fill="none" stroke-dasharray="5 3" opacity=".7"/>
+
+    <!-- Key milestone dots on Base -->
+    ${[2030,2035,2040].map(y=>`
+    <circle cx="${xPos(y).toFixed(1)}" cy="${yPos(baseGfi(y)).toFixed(1)}" r="5"
+            fill="#444" stroke="white" stroke-width="1.5"/>
+    <text x="${xPos(y).toFixed(1)}" y="${(yPos(baseGfi(y))-9).toFixed(1)}"
+          text-anchor="middle" font-size="9.5" font-weight="800" fill="#333">
+      −${basePct(y).toFixed(0)}%</text>`).join('')}
+
+    <!-- Key dots on Direct -->
+    ${[2030,2035].map(y=>`
+    <circle cx="${xPos(y).toFixed(1)}" cy="${yPos(dirGfi(y)).toFixed(1)}" r="5"
+            fill="#22A45D" stroke="white" stroke-width="1.5"/>
+    <text x="${(xPos(y)+14).toFixed(1)}" y="${(yPos(dirGfi(y))+4).toFixed(1)}"
+          text-anchor="start" font-size="9.5" font-weight="800" fill="#22A45D">
+      −${dirPct(y).toFixed(0)}%</text>`).join('')}
+
+    <!-- ZNZ labels -->
+    <text x="${(xPos(2031)).toFixed(1)}" y="${(yPos(19)-5).toFixed(1)}"
+          font-size="9" fill="#22A45D" font-weight="700">ZNZ ≤19</text>
+    <text x="${(xPos(2037)).toFixed(1)}" y="${(yPos(14)-5).toFixed(1)}"
+          font-size="9" fill="#22A45D" font-weight="700">ZNZ ≤14</text>
+
+    <!-- Reference label -->
+    <text x="${(PAD.left+6).toFixed(1)}" y="${(yPos(REF)-5).toFixed(1)}"
+          font-size="9" fill="#888">93.3 (2008 ref)</text>
+
+    <!-- Marker triangle -->
+    ${mYear && mGfi ? `
+    <polygon points="${mx},${my-11} ${mx-7},${my+5} ${mx+7},${my+5}"
+             fill="#9B59B6" opacity="0.9"/>
+    <text x="${mx.toFixed(1)}" y="${(my-15).toFixed(1)}" text-anchor="middle"
+          font-size="9.5" font-weight="800" fill="#9B59B6">🚢 ${mGfi.toFixed(1)}</text>` : ''}
+  </g>
+
+  <!-- Axes -->
+  <line x1="${PAD.left}" y1="${PAD.top}" x2="${PAD.left}" y2="${PAD.top+PLOT_H}"
+        stroke="#999" stroke-width="1.2"/>
+  <line x1="${PAD.left}" y1="${PAD.top+PLOT_H}" x2="${PAD.left+PLOT_W}" y2="${PAD.top+PLOT_H}"
+        stroke="#999" stroke-width="1.2"/>
+
+  <!-- X axis ticks & labels -->
+  ${LABEL_YEARS.map(y=>`
+  <line x1="${xPos(y).toFixed(1)}" y1="${(PAD.top+PLOT_H).toFixed(1)}"
+        x2="${xPos(y).toFixed(1)}" y2="${(PAD.top+PLOT_H+4).toFixed(1)}"
+        stroke="#999" stroke-width="1.2"/>
+  <text x="${xPos(y).toFixed(1)}" y="${(PAD.top+PLOT_H+16).toFixed(1)}"
+        text-anchor="middle" font-size="11" font-weight="600" fill="#1B3A5C">${y}</text>`).join('')}
+
+  <!-- Y axis label -->
+  <text transform="rotate(-90)" x="${-(PAD.top+PLOT_H/2)}" y="14"
+        text-anchor="middle" font-size="11" font-weight="600" fill="#1B3A5C">GFI (gCO₂eq/MJ)</text>
+
+  <!-- X axis label -->
+  <text x="${(PAD.left+PLOT_W/2).toFixed(1)}" y="${(SVG_H-6)}"
+        text-anchor="middle" font-size="11" font-weight="600" fill="#1B3A5C" id="xAxisLabel">Year</text>
+
+  <!-- Legend -->
+  <g transform="translate(${PAD.left},${SVG_H-14})">
+    <rect x="0" y="-8" width="12" height="8" fill="rgba(204,34,0,0.5)" rx="2"/>
+    <text x="15" y="0" font-size="9.5" fill="#CC2200" font-weight="700">Tier 2 Zone ($380)</text>
+    <rect x="130" y="-8" width="12" height="8" fill="rgba(232,160,0,0.6)" rx="2"/>
+    <text x="145" y="0" font-size="9.5" fill="#E07B00" font-weight="700">Tier 1 Zone ($100)</text>
+    <rect x="260" y="-8" width="12" height="8" fill="rgba(34,164,93,0.5)" rx="2"/>
+    <text x="275" y="0" font-size="9.5" fill="#22A45D" font-weight="700">Surplus Zone</text>
+    <line x1="370" y1="-4" x2="388" y2="-4" stroke="#444" stroke-width="2.5"/>
+    <text x="392" y="0" font-size="9.5" fill="#444" font-weight="700">Base Target</text>
+    <line x1="470" y1="-4" x2="488" y2="-4" stroke="#22A45D" stroke-width="2" stroke-dasharray="5 3"/>
+    <text x="492" y="0" font-size="9.5" fill="#22A45D" font-weight="700">Direct Target</text>
+    <line x1="580" y1="-4" x2="598" y2="-4" stroke="#22A45D" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <text x="602" y="0" font-size="9.5" fill="#22A45D">ZNZ Threshold</text>
+  </g>
+</svg>`;
+  return svg;
+}
+
+function renderChart(mYear, mGfi){
+  document.getElementById('mainChart').innerHTML = buildSVG(mYear||2028, mGfi||91);
+}
+
+// Initial render
+renderChart(markerYear, markerGfi);
+
+// ══════════════════════════════════════════════════════════
+// TARGETS TABLE
+// ══════════════════════════════════════════════════════════
+const tableYrs = [2028,2029,2030,2031,2032,2033,2034,2035,2040];
+const fuelHint = {
+  ar:{
+    2028:'VLSFO هيمنة | كفاءة', 2029:'VLSFO + بيوديزل', 2030:'~20% وقود منخفض',
+    2031:'LNG / بيوفيول', 2032:'~30% وقود بديل', 2033:'ميثانول / أمونيا',
+    2034:'ZNZ early adopters', 2035:'~43% وقود ZNZ', 2040:'65%+ ZNZ مطلوب'
+  },
+  en:{
+    2028:'VLSFO dominant | efficiency', 2029:'VLSFO + biodiesel blend', 2030:'~20% low-GHG fuel',
+    2031:'LNG / biofuel mix', 2032:'~30% alternative fuel', 2033:'Methanol / Ammonia ramp-up',
+    2034:'ZNZ early adopters', 2035:'~43% ZNZ or clean fuel', 2040:'65%+ ZNZ required'
+  }
+};
+
+function buildTable(){
+  const tbody = document.getElementById('tblBody');
+  tbody.innerHTML = '';
+  const L = currentLang;
+  tableYrs.forEach(y=>{
+    const bg=baseGfi(y), dg=dirGfi(y);
+    const bp=basePct(y).toFixed(0), dp=dirPct(y).toFixed(0);
+    const gap=(bg-dg).toFixed(1);
+    const t1k=((bg-dg)/1e6*100*1e6/1e3).toFixed(2);
+    const t2k=(1/1e6*380*1e6/1e3).toFixed(2);
+    const tbd = L==='ar' ? 'يُحدَّد 2032' : 'TBD by 2032';
+    const hint = fuelHint[L][y]||'';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="ty">${y}${y===2040?'*':''}</td>
+      <td class="tb">${bg.toFixed(1)} <small style="color:#CC2200">(−${bp}%)</small></td>
+      <td class="td">${y<=2035?dg.toFixed(1)+` <small style="color:#E07B00">(−${dp}%)</small>`:'<span style="color:#aaa;font-size:.7rem">'+tbd+'</span>'}</td>
+      <td style="font-weight:700;color:#1B3A5C">${y<=2035?gap:'—'}</td>
+      <td style="color:#E07B00">${y<=2035?t1k:'—'}</td>
+      <td style="color:#CC2200">${t2k}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  const nt=document.createElement('tr');
+  const noteAr='* 2040 = Base Target فقط (−65%). ⚠️ مسار Direct Compliance بعد 2035 رهن مراجعة MEPC قبل 2032 | T1 Cost = تكلفة لكل TJ عند وجود Tier 1 deficit كامل | T2 Cost = تكلفة كل غرام إضافي فوق Base per TJ';
+  const noteEn='* 2040 = Base Target only (−65%). ⚠️ Post-2035 Direct Compliance reduction trajectory subject to MEPC review before 2032 | T1 Cost = cost per TJ with full Tier 1 deficit | T2 Cost = cost per extra g/MJ above Base per TJ';
+  nt.innerHTML=`<td colspan="6" style="font-size:.67rem;color:#888;text-align:${currentLang==='ar'?'right':'left'};background:#f9f9f9;padding:8px 10px">${currentLang==='ar'?noteAr:noteEn}</td>`;
+  tbody.appendChild(nt);
+}
+buildTable();
+
+// ══════════════════════════════════════════════════════════
+// CALCULATOR
+// ══════════════════════════════════════════════════════════
+// slVl (VLSFO price) is Arabic-only — registered separately below
+const slIds=['slGfi','slYr','slEn'];
+
+function calc(){
+  const L = currentLang;
+
+  // Always update GFI, Year, Energy displays
+  document.getElementById('vGfi').textContent = document.getElementById('slGfi').value + ' g/MJ';
+  document.getElementById('vYr').textContent  = document.getElementById('slYr').value;
+  document.getElementById('vEn').textContent  = Number(document.getElementById('slEn').value).toLocaleString() + ' TJ';
+  // VLSFO display — Arabic only (slider hidden in EN via ar-only CSS)
+  document.getElementById('vVl').textContent  = document.getElementById('slVl').value + ' $/mt';
+
+  const gfi  = parseFloat(document.getElementById('slGfi').value);
+  const year = parseInt(document.getElementById('slYr').value);
+  const enTJ = parseFloat(document.getElementById('slEn').value);
+  const enMJ = enTJ * 1e6;
+
+  const bg = baseGfi(year);
+  const dg = dirGfi(year);
+
+  // Core GFI deficits — always calculated
+  const t1def = Math.max(0, Math.min(gfi, bg) - dg);
+  const t2def = Math.max(0, gfi - bg);
+  const surp  = Math.max(0, dg - gfi);
+
+  // Carbon costs — always calculated
+  const t1cMJ  = (t1def / 1e6) * 100;
+  const t2cMJ  = (t2def / 1e6) * 380;
+  const totMJ  = t1cMJ + t2cMJ;
+  const t1Ann  = t1cMJ * enMJ;
+  const t2Ann  = t2cMJ * enMJ;
+  const totAnn = totMJ * enMJ;
+  const surpAnn = (surp / 1e6) * enMJ * 380;
+
+  // ── FREIGHT — computed ONLY when Arabic ──────────────────
+  let fuelPct = 0, frtPct = 0;
+  if (L === 'ar') {
+    const vlsfo = parseFloat(document.getElementById('slVl').value);
+    const fuelMJ = vlsfo / LHV;
+    fuelPct = totMJ / fuelMJ * 100;
+    frtPct  = fuelPct * 0.4;
+  }
+  // ─────────────────────────────────────────────────────────
+
+  const isZNZ = gfi <= (year >= 2035 ? 14 : 19);
+  let zone, bgC, bdC, icon;
+
+  if (isZNZ) {
+    zone = L==='ar' ? 'Zero/Near-Zero — مؤهلة لمكافآت ZNZ من صندوق IMO Net-Zero Fund'
+                    : 'Zero/Near-Zero — Eligible for ZNZ rewards from IMO Net-Zero Fund';
+    bgC='rgba(46,109,164,.07)'; bdC='#2E6DA4'; icon='🌱';
+  } else if (gfi < dg) {
+    zone = L==='ar' ? 'منطقة الفائض ← السفينة تحصل على Surplus Units (SUs)'
+                    : 'Surplus Zone ← Ship earns Surplus Units (SUs)';
+    bgC='rgba(34,164,93,.07)'; bdC='#22A45D'; icon='✅';
+  } else if (gfi <= bg) {
+    zone = L==='ar' ? 'Tier 1 Deficit فقط ← السفينة بين Direct وBase Targets'
+                    : 'Tier 1 Deficit Only ← Ship between Direct and Base Targets';
+    bgC='rgba(232,160,0,.08)'; bdC='#E07B00'; icon='⚠️';
+  } else {
+    zone = L==='ar' ? 'Tier 1 + Tier 2 Deficit ← السفينة أسوأ من Base Target'
+                    : 'Tier 1 + Tier 2 Deficit ← Ship exceeds Base Target';
+    bgC='rgba(204,34,0,.07)'; bdC='#CC2200'; icon='🚨';
+  }
+
+  const lbl = {
+    year:   L==='ar' ? 'السنة'       : 'Year',
+    base:   L==='ar' ? 'Base Target' : 'Base Target',
+    direct: L==='ar' ? 'Direct Target': 'Direct Target',
+    actual: L==='ar' ? 'GFI الفعلي'  : 'Attained GFI',
+    t1d:    L==='ar' ? 'T1 deficit'  : 'T1 deficit',
+    t2d:    L==='ar' ? 'T2 deficit'  : 'T2 deficit',
+    surp:   L==='ar' ? 'فائض'        : 'Surplus',
+    energy: L==='ar' ? 'طاقة سنوية' : 'Annual energy',
+  };
+
+  const rm = document.getElementById('resMain');
+  rm.style.background = bgC;
+  rm.style.borderColor = bdC;
+  rm.innerHTML = `
+    <strong style="font-size:.9rem">${icon} ${zone}</strong><br>
+    <span style="font-size:.73rem;color:#555">
+      ${lbl.year}: <b>${year}</b> &nbsp;|&nbsp;
+      ${lbl.base}: <b style="color:#CC2200">${bg.toFixed(1)} g/MJ (−${basePct(year).toFixed(0)}%)</b> &nbsp;|&nbsp;
+      ${lbl.direct}: <b style="color:#E07B00">${dg.toFixed(1)} g/MJ (−${dirPct(year).toFixed(0)}%)</b> &nbsp;|&nbsp;
+      ${lbl.actual}: <b>${gfi.toFixed(1)} g/MJ</b>
+    </span><br>
+    <span style="font-size:.73rem;color:#555">
+      ${lbl.t1d}: <b>${t1def.toFixed(3)} g/MJ</b> &nbsp;|&nbsp;
+      ${lbl.t2d}: <b>${t2def.toFixed(3)} g/MJ</b> &nbsp;|&nbsp;
+      ${lbl.surp}: <b style="color:#22A45D">${surp.toFixed(3)} g/MJ</b> &nbsp;|&nbsp;
+      ${lbl.energy}: <b>${enTJ.toLocaleString()} TJ</b>
+    </span>
+  `;
+
+  const rr = document.getElementById('resRows');
+
+  if (gfi < dg) {
+    // ── SURPLUS state ──
+    const arFreight = L === 'ar'
+      ? `<div class="rb rbf"><div class="rl">أثر على أجرة الشحن</div><div class="rv" style="color:#22A45D">لا زيادة</div></div>`
+      : '';
+    rr.innerHTML = `
+      <div class="rb rbs"><div class="rl">${L==='ar'?'Surplus السنوي (القيمة القصوى)':'Annual Surplus (max value)'}</div>
+        <div class="rv" style="color:#22A45D">+$${(surpAnn/1e6).toFixed(2)}M</div></div>
+      <div class="rb rbs"><div class="rl">${L==='ar'?'SUs بالطن CO₂eq':'SUs in tCO₂eq'}</div>
+        <div class="rv" style="color:#22A45D">${((surp/1e6)*enMJ).toFixed(0)} t</div></div>
+      <div class="rb rbf"><div class="rl">${L==='ar'?'تكلفة RUs':'RU Cost'}</div>
+        <div class="rv" style="color:#22A45D">$0</div></div>
+      ${arFreight}
+    `;
+  } else {
+    // ── DEFICIT state ──
+    // Freight cards: Arabic ONLY
+    const arFreightRows = L === 'ar' ? `
+      <div class="rb rbf"><div class="rl">زيادة تكلفة الوقود</div>
+        <div class="rv" style="color:#2E6DA4">+${fuelPct.toFixed(2)}%</div></div>
+      <div class="rb rbf"><div class="rl">زيادة أجرة الشحن (معامل التمرير 40%)</div>
+        <div class="rv" style="color:#2E6DA4">+${frtPct.toFixed(2)}%</div></div>
+    ` : '';
+
+    rr.innerHTML = `
+      <div class="rb rb1"><div class="rl">${L==='ar'?'Tier 1 Cost السنوي':'Annual Tier 1 Cost'}</div>
+        <div class="rv" style="color:#E07B00">$${(t1Ann/1e6).toFixed(2)}M</div></div>
+      <div class="rb rb2"><div class="rl">${L==='ar'?'Tier 2 Cost السنوي':'Annual Tier 2 Cost'}</div>
+        <div class="rv" style="color:#CC2200">$${(t2Ann/1e6).toFixed(2)}M</div></div>
+      <div class="rb rbt"><div class="rl">${L==='ar'?'إجمالي تكلفة الكربون':'Total Carbon Cost'}</div>
+        <div class="rv" style="color:#1B3A5C">$${(totAnn/1e6).toFixed(2)}M</div></div>
+      ${arFreightRows}
+      <div class="rb rbt"><div class="rl">${L==='ar'?'تكلفة الكربون ($/MJ)':'Carbon Cost ($/MJ)'}</div>
+        <div class="rv" style="color:#1B3A5C">${(totMJ*1000).toFixed(4)} m$/MJ</div></div>
+    `;
+  }
+
+  // Update chart marker
+  markerYear = year;
+  markerGfi  = gfi;
+  renderChart(year, gfi);
+}
+
+// Register main sliders (language-independent)
+slIds.forEach(id => document.getElementById(id).addEventListener('input', calc));
+// VLSFO slider triggers calc only when visible (Arabic mode)
+document.getElementById('slVl').addEventListener('input', () => {
+  if (currentLang === 'ar') calc();
+});
+
+// Init with Arabic
+setLang('ar');
+</script>
+</body>
+</html>
